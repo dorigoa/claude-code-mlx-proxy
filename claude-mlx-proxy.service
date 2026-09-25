@@ -1,0 +1,22 @@
+# Put this file in /etc/systemd/system/claude-mlx-proxy.service
+
+[Unit]
+Description=Claude Code MLX proxy (Anthropic Messages -> mlx_lm.server)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=alvise
+WorkingDirectory=/home/alvise/claude-code-mlx-proxy
+EnvironmentFile=/home/alvise/claude-code-mlx-proxy/.env
+Environment=PYTHONUNBUFFERED=1
+ExecStart=/home/alvise/claude-code-mlx-proxy/.venv/bin/python main.py
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target
