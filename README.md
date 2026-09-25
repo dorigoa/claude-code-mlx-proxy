@@ -1,3 +1,53 @@
+# QUICK INSTALLATION (Alvise)
+```
+git clone https://github.com/dorigoa/claude-code-mlx-proxy.git
+cd claude-code-mlx-proxy
+cp env .env
+
+for k in HOST PORT MLX_SERVER_URL MODEL_NAME VERBOSE; do grep -E "^$k=" .env || echo "MANCA: $k"; done
+
+UV_PYTHON_PREFERENCE=only-managed uv sync --frozen
+
+
+
+
+sudo tee /etc/systemd/system/claude-mlx-proxy.service >/dev/null <<EOF
+[Unit]
+Description=Claude Code MLX proxy (Anthropic Messages -> mlx_lm.server)
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=$USER
+WorkingDirectory=$DIR
+Environment=PYTHONUNBUFFERED=1
+ExecStart=$DIR/.venv/bin/python main.py
+Restart=on-failure
+RestartSec=5
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+
+
+
+sudo systemd-analyze verify /etc/systemd/system/claude-mlx-proxy.service && echo "unit OK"
+
+
+
+sudo systemctl daemon-reload && sudo systemctl enable --now claude-mlx-proxy
+
+
+TEST: claude --settings ~/.claude/mlx-settings.json \
+  -p "Leggi il file test.txt e dimmi quante righe contiene e qual è l'ultima parola."
+```
+
+
 # Local MLX Backend for Claude Code
 
 This is a fork of [chand1012/claude-code-mlx-proxy](https://github.com/chand1012/claude-code-mlx-proxy) that rewrites the architecture to act as a lightweight translation proxy between **Claude Code** and an [mlx-lm](https://github.com/ml-explore/mlx-examples/tree/main/llms/mlx_lm) OpenAI-compatible server. It allows you to use open-source models like Llama 3, GLM-4.5-Air, DeepSeek, and more, all running on your Apple Silicon Mac.
